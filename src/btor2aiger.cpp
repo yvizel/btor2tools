@@ -17,26 +17,10 @@
 #include <unordered_set>
 #include <vector>
 
-#include "boolector/boolector.h"
-#include "btor2parser/btor2parser.h"
-extern "C" {
-#include "aiger.h"
-}
+#include "btor2aiger.h"
+
 
 /*--------------------------------------------------------------------------*/
-
-static void
-print_usage ()
-{
-  std::cout << "Usage:" << std::endl;
-  std::cout << "  btor2aiger [options] BTOR2_FILE\n" << std::endl;
-  std::cout << "Options:" << std::endl;
-  std::cout << "  -h,--help   Print this help and exit." << std::endl;
-  std::cout << "  -a          Print in AIGER ascii format." << std::endl;
-  std::cout << "  -i          Ignore AIGER errors." << std::endl;
-  std::cout << std::endl;
-}
-
 static void
 die (const char *fmt, ...)
 {
@@ -48,83 +32,8 @@ die (const char *fmt, ...)
   fprintf (stderr, "\n");
   exit (EXIT_FAILURE);
 }
-
 /*--------------------------------------------------------------------------*/
 
-class Btor2Model
-{
- public:
-  Btor *btor;
-
-  std::vector<BoolectorNode *> inputs;
-  std::unordered_map<int64_t, BoolectorNode *> states;
-  std::unordered_map<int64_t, BoolectorNode *> init;
-  std::unordered_map<int64_t, BoolectorNode *> next;
-  std::vector<BoolectorNode *> bad;
-  std::vector<BoolectorNode *> constraints;
-
-  std::unordered_map<int64_t, BoolectorNode *> nodes;
-  std::unordered_map<int64_t, BoolectorSort> sorts;
-
-  Btor2Model () : btor (boolector_new ()){};
-
-  ~Btor2Model ()
-  {
-    for (auto kv : nodes)
-    {
-      boolector_release (btor, kv.second);
-    }
-    for (auto kv : sorts)
-    {
-      boolector_release_sort (btor, kv.second);
-    }
-    boolector_delete (btor);
-  }
-
-  BoolectorSort get_sort (int64_t id)
-  {
-    auto it = sorts.find (id);
-    assert (it != sorts.end ());
-    return it->second;
-  }
-
-  void add_sort (int64_t id, BoolectorSort sort)
-  {
-    assert (sorts.find(id)  == sorts.end ());
-    sorts[id] = sort;
-  }
-
-  BoolectorNode *get_node (int64_t id)
-  {
-    auto it = nodes.find (id);
-    if (it == nodes.end ())
-    {
-      it = nodes.find (-id);
-      assert (it != nodes.end ());
-      add_node (id, boolector_not (btor, it->second));
-      return nodes[id];
-    }
-    return it->second;
-  }
-
-  void add_node (int64_t id, BoolectorNode *node)
-  {
-    assert (nodes.find(id) == nodes.end ());
-    nodes[id] = node;
-  }
-
-  BoolectorNode *get_init (int64_t id)
-  {
-    auto it = init.find (id);
-    return it != init.end () ? it->second : nullptr;
-  }
-
-  BoolectorNode *get_next (int64_t id)
-  {
-    auto it = next.find (id);
-    return it != next.end () ? it->second : nullptr;
-  }
-};
 
 using BtorUnaryFun   = BoolectorNode *(*) (Btor *, BoolectorNode *);
 using BtorBinaryFun  = BoolectorNode *(*) (Btor *,
@@ -193,8 +102,7 @@ static std::unordered_map<Btor2Tag, BtorTernaryFun> s_tag2terfun ({
     //  {BTOR2_TAG_write, boolector_write},
 });
 
-static void
-parse_btor2 (FILE *infile, Btor2Model &model)
+void parse_btor2 (FILE *infile, Btor2Model &model)
 {
   Btor2Parser *parser;
   Btor2LineIterator it;
@@ -472,8 +380,7 @@ add_bad_to_aiger (Btor *btor,
   boolector_aig_free_bits (amgr, bits, nbits);
 }
 
-static void
-generate_aiger (Btor2Model &model, bool ascii_mode, bool ignore_error)
+aiger* generate_aiger (Btor2Model &model, bool ascii_mode, bool ignore_error)
 {
   BoolectorAIGMgr *amgr;
   aiger *aig;
@@ -535,61 +442,8 @@ generate_aiger (Btor2Model &model, bool ascii_mode, bool ignore_error)
     die (err);
   }
 
-  aiger_write_to_file (
-      aig, ascii_mode ? aiger_ascii_mode : aiger_binary_mode, stdout);
-
-  aiger_reset (aig);
-
   boolector_aig_delete (amgr);
+  
+  return aig;
 }
 
-int
-main (int argc, char *argv[])
-{
-  FILE *infile     = 0;
-  char *infilename = 0;
-  bool ascii_mode  = false;
-  bool ignore_error = false;
-
-  for (int i = 1; i < argc; ++i)
-  {
-    if (!strcmp (argv[i], "-a"))
-    {
-      ascii_mode = true;
-    }
-    else if (!strcmp (argv[i], "-i"))
-    {
-      ignore_error = true;
-    }
-    else if (!strcmp (argv[i], "-h") || !strcmp (argv[i], "--help"))
-    {
-      print_usage ();
-      return EXIT_SUCCESS;
-    }
-    else
-    {
-      if (infilename)
-      {
-        die ("Multiple input files specified.");
-      }
-      infilename = argv[i];
-    }
-  }
-
-  if (!infilename)
-  {
-    die ("No BTOR2 input file specified.");
-  }
-
-  infile = fopen (infilename, "r");
-  if (!infile)
-  {
-    die ("Cannot open BTOR2 input file.");
-  }
-  Btor2Model model;
-  parse_btor2 (infile, model);
-  fclose (infile);
-  generate_aiger (model, ascii_mode, ignore_error);
-
-  return EXIT_SUCCESS;
-}
