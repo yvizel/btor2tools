@@ -19,13 +19,14 @@ Build
 From the Btor2Tools root directory configure and build as follows:
 ```
 ./configure.sh
+cd build
 make
 ```
 For more build configuration options of Btor2Tools, see `configure.sh -h`.
 
-All binaries (btorsim, catbtor) are generated into directory `btor2tools/bin`,
+All binaries (btorsim, catbtor) are generated into directory `build/bin`,
 and all libraries (libbtor2parser.a, libbtor2parser.so) are generated into
-directory `btor2tools/build`.
+directory `build/lib`.
 
 
 Usage
@@ -145,7 +146,7 @@ as defined below (`B_[n]` represents a bit-vector sort of size n, and
 | `and`, `nand`, `nor`, `or`, `xnor`, `xor`         | bit-wise              | `B_[n] x B_[n] -> B_[n]`   |
 | `rol`, `ror`, `sll`, `sra`, `srl`                 | rotate, shift         | `B_[n] x B_[n] -> B_[n]`   |
 | `add`, `mul`, `[su]div`, `smod`, `[su]rem`, `sub` | arithmetic            | `B_[n] x B_[n] -> B_[n]`   |
-| `[su]addo`, `[su]divo`, `[su]mulo`, `[su]subo`    | overflow              | `B_[n] x B_[n] -> B_[1]`   |
+| `[su]addo`, `sdivo`, `[su]mulo`, `[su]subo`       | overflow              | `B_[n] x B_[n] -> B_[1]`   |
 | `concat`                                          | concatenation         | `B_[n] x B_[m] -> B_[n+m]` |
 | `read`                                            | array read            | `A_[I -> E] x I -> E`      |
 
