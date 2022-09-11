@@ -3,6 +3,9 @@
 #include "boolector/boolector.h"
 #include "btor2parser/btor2parser.h"
 
+#include <vector>
+#include <unordered_map>
+
 extern "C" {
 #include "aiger.h"
 }
@@ -83,4 +86,4 @@ class Btor2Model
 };
 
 void parse_btor2 (FILE *infile, Btor2Model &model);
-aiger* generate_aiger (Btor2Model &model, bool ascii_mode, bool ignore_error);
+aiger* generate_aiger (Btor2Model &model, bool ignore_error);

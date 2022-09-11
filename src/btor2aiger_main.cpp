@@ -92,7 +92,7 @@ main (int argc, char *argv[])
   Btor2Model model;
   parse_btor2 (infile, model);
   fclose (infile);
-  aiger *aig = generate_aiger (model, ascii_mode, ignore_error);
+  aiger *aig = generate_aiger (model, ignore_error);
 
   aiger_write_to_file (
       aig, ascii_mode ? aiger_ascii_mode : aiger_binary_mode, stdout);

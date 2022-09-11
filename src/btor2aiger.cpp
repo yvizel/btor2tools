@@ -380,7 +380,7 @@ add_bad_to_aiger (Btor *btor,
   boolector_aig_free_bits (amgr, bits, nbits);
 }
 
-aiger* generate_aiger (Btor2Model &model, bool ascii_mode, bool ignore_error)
+aiger* generate_aiger (Btor2Model &model, bool ignore_error)
 {
   BoolectorAIGMgr *amgr;
   aiger *aig;
