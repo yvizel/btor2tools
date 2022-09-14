@@ -2,9 +2,9 @@ cmake_minimum_required(VERSION 3.3)
 
 project(btor2tools)
 
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -113,11 +113,13 @@ if(ASAN)
 endif()
 
 if(BUILD_BTOR2AIGER)
-  if(NOT EXISTS "${CMAKE_SOURCE_DIR}/deps/aiger/aiger.c")
-    message(FATAL_ERROR
-            "Could not find AIGER sources. Execute script setup-aiger.sh.")
+  if(NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/deps/aiger/aiger.c")
+    execute_process( COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/setup-deps.sh WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/)
+    #message(FATAL_ERROR
+    #        "Could not find AIGER sources. Execute script setup-aiger.sh.")
   endif()
-  list(APPEND CMAKE_PREFIX_PATH "${PROJECT_SOURCE_DIR}/deps/install")
+  set(BTOR_DEPS_DIR "${CMAKE_CURRENT_BINARY_DIR}/deps/")
+  list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_BINARY_DIR}/deps/install")
   find_package(Boolector)
 endif()
 
