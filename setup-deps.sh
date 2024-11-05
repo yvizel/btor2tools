@@ -7,7 +7,7 @@ mkdir -p deps
 
 # Setup AIGER
 rm -rf aiger-1.9.9.tar.gz
-wget http://fmv.jku.at/aiger/aiger-1.9.9.tar.gz
+wget https://fmv.jku.at/aiger/aiger-1.9.9.tar.gz
 tar xf aiger-1.9.9.tar.gz
 mv aiger-1.9.9 deps/aiger
 rm deps/aiger/VERSION
